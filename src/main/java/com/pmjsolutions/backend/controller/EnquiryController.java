@@ -1,22 +1,48 @@
 package com.pmjsolutions.backend.controller;
 
+import com.pmjsolutions.backend.dto.EnquiryDto;
 import com.pmjsolutions.backend.model.Enquiry;
-import com.pmjsolutions.backend.repository.EnquiryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.pmjsolutions.backend.service.EnquiryService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")  // Allow requests from your React frontend
-@RequestMapping("/api/enquiries")
+@RequestMapping("/api/enquiry")
 public class EnquiryController {
 
-    @Autowired
-    private EnquiryRepository enquiryRepository;
+    private final EnquiryService service;
+
+    public EnquiryController(EnquiryService service) {
+        this.service = service;
+    }
 
     @PostMapping
-    public Enquiry submitEnquiry(@RequestBody Enquiry enquiry) {
-        // 🔍 Debug print to verify received data
-        System.out.println("📥 Received Enquiry: " + enquiry);
-        return enquiryRepository.save(enquiry);
+    public ResponseEntity<?> createEnquiry(@Valid @RequestBody EnquiryDto dto) {
+        Enquiry saved = service.saveEnquiry(dto);
+        return ResponseEntity.ok().body(new ApiResponse(true, "Enquiry received", saved.getId()));
+    }
+
+    // health check simple GET
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
+    }
+
+    static class ApiResponse {
+        private boolean success;
+        private String message;
+        private Long id;
+
+        public ApiResponse(boolean success, String message, Long id) {
+            this.success = success;
+            this.message = message;
+            this.id = id;
+        }
+
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public Long getId() { return id; }
     }
 }
+
